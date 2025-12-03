@@ -1,0 +1,201 @@
+{
+  "author": "Luis",
+  "description": "Extensão completa de contadores de tempo: timers globais, múltiplos timers e comportamento para objetos.",
+  "fullName": "Super Timer",
+  "name": "SuperTimer",
+  "version": "1.0.0",
+  "tags": "timer, tempo, contador, cronometro",
+  "eventsFunctions": [
+    {
+      "name": "CreateTimer",
+      "fullName": "Criar timer",
+      "sentence": "Criar timer global chamado _PARAM1_",
+      "functionType": "Action",
+      "parameters": [
+        { "name": "TimerName", "type": "string" }
+      ],
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const name = eventsFunctionContext.getArgument(\"TimerName\"); const timers = runtimeScene.getVariables().get(\"SuperTimers\"); if (!timers.hasChild(name)) timers.getChild(name).setStructure(); const t = timers.getChild(name); t.getChild(\"time\").setNumber(0); t.getChild(\"paused\").setNumber(0);"
+        }
+      ]
+    },
+    {
+      "name": "UpdateAll",
+      "fullName": "Atualizar todos os timers",
+      "sentence": "Atualizar todos os timers globais",
+      "functionType": "Action",
+      "parameters": [],
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const dt = runtimeScene.getElapsedTimeInSeconds(); const timers = runtimeScene.getVariables().get(\"SuperTimers\"); for (let key of timers.getAllChildren().keys()) { const timer = timers.getChild(key); if (timer.getChild(\"paused\").getAsNumber() === 0) timer.getChild(\"time\").add(dt); }"
+        }
+      ]
+    },
+    {
+      "name": "PauseTimer",
+      "fullName": "Pausar timer",
+      "sentence": "Pausar timer global _PARAM1_",
+      "functionType": "Action",
+      "parameters": [
+        { "name": "TimerName", "type": "string" }
+      ],
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const name = eventsFunctionContext.getArgument(\"TimerName\"); const timers = runtimeScene.getVariables().get(\"SuperTimers\"); timers.getChild(name).getChild(\"paused\").setNumber(1);"
+        }
+      ]
+    },
+    {
+      "name": "ResumeTimer",
+      "fullName": "Continuar timer",
+      "sentence": "Continuar timer global _PARAM1_",
+      "functionType": "Action",
+      "parameters": [
+        { "name": "TimerName", "type": "string" }
+      ],
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const name = eventsFunctionContext.getArgument(\"TimerName\"); const timers = runtimeScene.getVariables().get(\"SuperTimers\"); timers.getChild(name).getChild(\"paused\").setNumber(0);"
+        }
+      ]
+    },
+    {
+      "name": "ResetTimer",
+      "fullName": "Resetar timer",
+      "sentence": "Resetar timer global _PARAM1_",
+      "functionType": "Action",
+      "parameters": [
+        { "name": "TimerName", "type": "string" }
+      ],
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const name = eventsFunctionContext.getArgument(\"TimerName\"); const timers = runtimeScene.getVariables().get(\"SuperTimers\"); timers.getChild(name).getChild(\"time\").setNumber(0);"
+        }
+      ]
+    },
+    {
+      "name": "GetTimer",
+      "fullName": "Obter tempo do timer global",
+      "functionType": "Expression",
+      "returnType": "number",
+      "parameters": [
+        { "name": "TimerName", "type": "string" }
+      ],
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const name = eventsFunctionContext.getArgument(\"TimerName\"); const timers = runtimeScene.getVariables().get(\"SuperTimers\"); eventsFunctionContext.returnValue = timers.getChild(name).getChild(\"time\").getAsNumber();"
+        }
+      ]
+    },
+    {
+      "name": "Reached",
+      "fullName": "Tempo atingido",
+      "sentence": "Timer global _PARAM1_ atingiu _PARAM2_ segundos",
+      "functionType": "Condition",
+      "parameters": [
+        { "name": "TimerName", "type": "string" },
+        { "name": "Limit", "type": "expression", "valueType": "number" }
+      ],
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const name = eventsFunctionContext.getArgument(\"TimerName\"); const limit = eventsFunctionContext.getArgument(\"Limit\"); const timers = runtimeScene.getVariables().get(\"SuperTimers\"); eventsFunctionContext.returnValue = timers.getChild(name).getChild(\"time\").getAsNumber() >= limit;"
+        }
+      ]
+    }
+  ],
+  "eventsBasedBehaviors": [
+    {
+      "name": "ObjectTimer",
+      "fullName": "Timer de Objeto",
+      "description": "Adiciona um timer independente ao objeto.",
+      "propertyDescriptors": [],
+      "eventsFunctions": [
+        {
+          "name": "Reset",
+          "fullName": "Resetar timer",
+          "functionType": "Action",
+          "objectLists": { "Object": [] },
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const obj = eventsFunctionContext.getObjects(\"Object\")[0]; obj._timer = 0; obj._timerPaused = false;"
+            }
+          ]
+        },
+        {
+          "name": "Update",
+          "fullName": "Atualizar timer",
+          "functionType": "Action",
+          "objectLists": { "Object": [] },
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const dt = runtimeScene.getElapsedTimeInSeconds(); const obj = eventsFunctionContext.getObjects(\"Object\")[0]; if (obj._timer === undefined) obj._timer = 0; if (!obj._timerPaused) obj._timer += dt;"
+            }
+          ]
+        },
+        {
+          "name": "Pause",
+          "fullName": "Pausar timer",
+          "functionType": "Action",
+          "objectLists": { "Object": [] },
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const obj = eventsFunctionContext.getObjects(\"Object\")[0]; obj._timerPaused = true;"
+            }
+          ]
+        },
+        {
+          "name": "Resume",
+          "fullName": "Continuar timer",
+          "functionType": "Action",
+          "objectLists": { "Object": [] },
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const obj = eventsFunctionContext.getObjects(\"Object\")[0]; obj._timerPaused = false;"
+            }
+          ]
+        },
+        {
+          "name": "GetTime",
+          "fullName": "Obter tempo",
+          "functionType": "Expression",
+          "returnType": "number",
+          "objectLists": { "Object": [] },
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const obj = eventsFunctionContext.getObjects(\"Object\")[0]; eventsFunctionContext.returnValue = obj._timer || 0;"
+            }
+          ]
+        },
+        {
+          "name": "IsTimeReached",
+          "fullName": "Tempo atingido",
+          "sentence": "O tempo do objeto atingiu _PARAM1_",
+          "functionType": "Condition",
+          "parameters": [
+            { "name": "Limit", "type": "expression", "valueType": "number" }
+          ],
+          "objectLists": { "Object": [] },
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const limit = eventsFunctionContext.getArgument(\"Limit\"); const obj = eventsFunctionContext.getObjects(\"Object\")[0]; eventsFunctionContext.returnValue = (obj._timer || 0) >= limit;"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
